@@ -1,96 +1,185 @@
-<!DOCTYPE html>
-<html lang="en">
-
+<!doctype html>
+<html lang="ko">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>storyroom</title>
-    <link rel="stylesheet" href="https://s3.ap-northeast-2.amazonaws.com/materials.spartacodingclub.kr/easygpt/default.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-        crossorigin="anonymous"></script>
-    <style>
-        body {
-            font-family: 'CircularStd', 'Helvetica', sans-serif; /* 폰트 설정 */
-        }
-
-        .hero-section {
-            background-color: purple; /* 배경색 설정 */
-            color: white; /* 글씨색 설정 */
-            text-align: left; /* 왼쪽 정렬 설정 */
-            padding: 50px 20px; /* 여백 설정 */
-            position: relative;
-        }
-
-        .hero-section h1 {
-            font-size: 2rem; /* 제목 폰트 크기 설정 */
-            font-weight: bold; /* 제목 폰트 굵기 설정 */
-            margin-bottom: 10px; /* 제목과 소제목 사이 여백 설정 */
-        }
-
-        .hero-section h2 {
-            font-size: 1.2rem; /* 소제목 폰트 크기 설정 */
-        }
-
-        .options {
-            position: absolute;
-            bottom: 10px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-        }
-
-        .option-item {
-            margin-left: 10px;
-            cursor: pointer;
-        }
-
-        .option-item:last-child {
-            margin-left: 0;
-        }
-
-        .content-section {
-            margin-top: 20px;
-        }
-    </style>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<title>gotosystem v1.0 (Web, single file)</title>
+	<style>
+		:root {
+			--bg: #0b0b0b;
+			--fg: #eaeaea;
+			--muted: #aaaaaa;
+			--accent: #3ea7ff;
+			--card: #151515;
+			--border: #2a2a2a;
+		}
+		* { box-sizing: border-box; }
+		html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+		header { padding: 16px; border-bottom: 1px solid var(--border); }
+		h1 { margin: 0; font-size: 20px; }
+		.sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+		main { padding: 16px; display: grid; gap: 16px; }
+		.controls { display: flex; align-items: center; gap: 8px; }
+		button { background: var(--accent); color: #000; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+		button[disabled] { opacity: .5; cursor: not-allowed; }
+		.status { color: var(--muted); margin-left: 6px; }
+		.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+		.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+		.card h3 { margin: 0 0 8px; font-size: 16px; }
+		.log pre { background: #0f0f0f; border: 1px solid var(--border); padding: 10px; border-radius: 8px; max-height: 220px; overflow: auto; }
+		footer { padding: 12px 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+	</style>
 </head>
-
 <body>
-    <!-- Hero Section -->
-    <div class="hero-section">
-        <h1>이야기방</h1>
-        <h2>당신에게 편안함을 주는 곳</h2>
-        <div class="options">
-            <div class="option-item" onclick="showWebNovel()">웹소설</div>
-            <div>|  <div>
-            <div class="option-item" onclick="showWebToon()">웹툰</div>
-        </div>
-    </div>
+	<header>
+		<h1>gotosystem v1.0</h1>
+		<p class="sub">GPS + 자이로/나침반으로 고도/방위 목표각 계산</p>
+	</header>
 
-    <!-- Content Section -->
-    <div class="content-section" id="webNovelContent">
-        <!-- Web소설 목록을 보여주는 내용을 추가할 수 있습니다. -->
-        <p>웹소설 목록이 여기에 나옵니다.</p>
-    </div>
+	<main>
+		<section class="controls">
+			<button id="btnStart">시작</button>
+			<button id="btnStop" disabled>중지</button>
+			<span id="status" class="status">대기</span>
+		</section>
 
-    <div class="content-section" id="webToonContent" style="display: none;">
-        <!-- Web툰 목록을 보여주는 내용을 추가할 수 있습니다. -->
-        <p>웹툰 목록이 여기에 나옵니다.</p>
-    </div>
+		<section class="grid">
+			<div class="card">
+				<h3>위치</h3>
+				<div>위도: <span id="lat">-</span> °</div>
+				<div>경도: <span id="lon">-</span> °</div>
+				<div>정확도: <span id="acc">-</span> m</div>
+			</div>
+			<div class="card">
+				<h3>자세/방위</h3>
+				<div>헤딩(북=0°): <span id="heading">-</span> °</div>
+				<div>원천: <span id="headingSrc">-</span></div>
+			</div>
+			<div class="card">
+				<h3>모터 목표</h3>
+				<div>모터1(고도각=위도): <span id="m1">-</span> °</div>
+				<div>모터2(북쪽 향하도록 회전): <span id="m2">-</span> °</div>
+			</div>
+		</section>
 
-    <script>
-        function showWebNovel() {
-            document.getElementById("webNovelContent").style.display = "block";
-            document.getElementById("webToonContent").style.display = "none";
-        }
+		<section class="log">
+			<h3>로그</h3>
+			<pre id="log"></pre>
+		</section>
+	</main>
 
-        function showWebToon() {
-            document.getElementById("webNovelContent").style.display = "none";
-            document.getElementById("webToonContent").style.display = "block";
-        }
-    </script>
+	<footer>
+		<span>HTTPS 환경에서 동작(센서 권한 필요). GitHub Pages 업로드 권장.</span>
+	</footer>
+
+	<script>
+	(() => {
+		const ui = {
+			btnStart: document.getElementById('btnStart'),
+			btnStop: document.getElementById('btnStop'),
+			status: document.getElementById('status'),
+			lat: document.getElementById('lat'),
+			lon: document.getElementById('lon'),
+			acc: document.getElementById('acc'),
+			heading: document.getElementById('heading'),
+			headingSrc: document.getElementById('headingSrc'),
+			m1: document.getElementById('m1'),
+			m2: document.getElementById('m2'),
+			log: document.getElementById('log'),
+		};
+
+		let running = false;
+		let watchId = null;
+		let headingDeg = null;
+		let headingSource = '-';
+		let latDeg = null, lonDeg = null, accM = null;
+
+		function setStatus(s) { ui.status.textContent = s; }
+		function log(msg) {
+			const t = new Date().toLocaleTimeString();
+			ui.log.textContent = \`[\${t}] \${msg}\n\` + ui.log.textContent;
+		}
+		function clampDeg(d) {
+			let x = ((d % 360) + 360) % 360;
+			return x;
+		}
+		function updateOutputs() {
+			const m1 = (latDeg != null) ? latDeg : null;
+			const m2 = (headingDeg != null) ? clampDeg(-headingDeg) : null;
+			ui.m1.textContent = (m1 != null) ? m1.toFixed(2) : '-';
+			ui.m2.textContent = (m2 != null) ? m2.toFixed(2) : '-';
+		}
+		function startGeo() {
+			if (!('geolocation' in navigator)) { log('Geolocation not supported'); return; }
+			watchId = navigator.geolocation.watchPosition(pos => {
+				latDeg = pos.coords.latitude;
+				lonDeg = pos.coords.longitude;
+				accM = pos.coords.accuracy;
+				ui.lat.textContent = latDeg.toFixed(6);
+				ui.lon.textContent = lonDeg.toFixed(6);
+				ui.acc.textContent = accM?.toFixed(0) ?? '-';
+				updateOutputs();
+			}, err => {
+				log(\`GPS error: \${err.message}\`);
+			}, {
+				enableHighAccuracy: true,
+				maximumAge: 2000,
+				timeout: 10000
+			});
+		}
+		function onDO(e) {
+			let hdg = null;
+			if (typeof e.webkitCompassHeading === 'number') {
+				hdg = e.webkitCompassHeading; // 0..360, 0=N
+				headingSource = 'webkitCompassHeading';
+			} else if (typeof e.alpha === 'number') {
+				hdg = 360 - e.alpha; // fallback
+				headingSource = 'alpha';
+			}
+			if (hdg != null && isFinite(hdg)) {
+				headingDeg = clampDeg(hdg);
+				ui.heading.textContent = headingDeg.toFixed(1);
+				ui.headingSrc.textContent = headingSource;
+				updateOutputs();
+			}
+		}
+		async function startOrientation() {
+			try {
+				if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+					const state = await DeviceOrientationEvent.requestPermission();
+					if (state !== 'granted') { log('Device orientation permission denied'); return; }
+				}
+			} catch (e) {}
+			window.addEventListener('deviceorientation', onDO, true);
+			window.addEventListener('deviceorientationabsolute', onDO, true);
+		}
+		function stopAll() {
+			if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+			window.removeEventListener('deviceorientation', onDO, true);
+			window.removeEventListener('deviceorientationabsolute', onDO, true);
+		}
+		ui.btnStart.addEventListener('click', async () => {
+			if (running) return;
+			running = true;
+			ui.btnStart.disabled = true;
+			ui.btnStop.disabled = false;
+			setStatus('실행 중');
+			log('Start pressed');
+			startGeo();
+			await startOrientation();
+		});
+		ui.btnStop.addEventListener('click', () => {
+			if (!running) return;
+			running = false;
+			ui.btnStart.disabled = false;
+			ui.btnStop.disabled = true;
+			setStatus('대기');
+			log('Stop pressed');
+			stopAll();
+		});
+	})();
+	</script>
 </body>
-
 </html>
+
+
